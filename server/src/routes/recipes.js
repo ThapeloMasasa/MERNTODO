@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { RecipeModel } from "../models/recipes.js";
+import { UserModel } from "../models/Users.js";
 import mongoose from "mongoose";
 
 
@@ -30,20 +31,20 @@ router.post("/", async (req, res) => {
 });
 
 router.put("/", async (req, res) => {
+    const recipe = await RecipeModel.findById(req.body.recipeID);
+    const user = await UserModel.findById(req.body.userID);
     
     try {
-        const recipe = await RecipeModel.findById(req.params.id);
-        const user = await UserModel.findById(req.body.userId);
         user.savedRecipes.push(recipe);
         await user.save();
-        res.json({savedRecipes: user.savedRecipes});
+        res.status(201).json({savedRecipes: user.savedRecipes});
     }   
     catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
-router.get("/savedRecipes/ids", async (req, res) => {
+router.get("/savedRecipes/ids/:userID", async (req, res) => {
     try {
         const user = await UserModel.findById(req.params.id);
         res.json({savedRecipes: user?.savedRecipes});
@@ -53,16 +54,7 @@ router.get("/savedRecipes/ids", async (req, res) => {
     }
 });
 
-router.get("/savedRecipes", async (req, res) => {
-    try {
-        const user = await UserModel.findById(req.params.id);
-        const savedRecipes = await RecipeModel.find({_id: {$in: user.savedRecipes}});
-        res.json({savedRecipes});
-    }
-    catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
+
 
 
 export { router as recipeRouter };
